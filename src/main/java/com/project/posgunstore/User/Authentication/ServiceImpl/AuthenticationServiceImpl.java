@@ -1,0 +1,136 @@
+package com.project.posgunstore.User.Authentication.ServiceImpl;
+
+import com.project.posgunstore.Config.Security.JwtUtil;
+import com.project.posgunstore.PasswordResetToken.Model.PasswordResetToken;
+import com.project.posgunstore.PasswordResetToken.Repository.PasswordResetTokenRepository;
+import com.project.posgunstore.Station.Model.Station;
+import com.project.posgunstore.Station.Repository.StationRepository;
+import com.project.posgunstore.User.Authentication.DTO.JwtResponse;
+import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
+import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
+import com.project.posgunstore.User.Authentication.Service.AuthenticationService;
+import com.project.posgunstore.User.Model.User;
+import com.project.posgunstore.User.Repository.UserRepository;
+import com.project.posgunstore.util.ENUM.Role;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+public class AuthenticationServiceImpl implements AuthenticationService {
+
+    @Autowired
+    UserRepository userRepo;
+    @Autowired
+    StationRepository stationRepo;
+    @Autowired
+    PasswordEncoder passwordEncoder;
+    @Autowired
+    AuthenticationManager authManager;
+    @Autowired
+    PasswordResetTokenRepository passwordResetTokenRepository;
+    @Autowired
+    JwtUtil jwtUtil;
+
+    @Override
+    public ResponseEntity<?> signup(SignupRequest req) {
+        if(userRepo.existsByUsername(req.getUsername())) return ResponseEntity
+                .badRequest()
+                .body("Username taken");;
+        if(userRepo.existsByEmail(req.getEmail())) return ResponseEntity
+                .badRequest()
+                .body("Email taken");
+        if(!req.getPassword().equals(req.getConfirmPassword())) return ResponseEntity
+                .badRequest()
+                .body("Passwords do not match");;
+
+        User u = new User();
+        u.setFirstName(req.getFirstName());
+        u.setLastName(req.getLastName());
+        u.setUsername(req.getUsername());
+        u.setEmail(req.getEmail());
+        u.setPassword(passwordEncoder.encode(req.getPassword()));
+        u.setRole(Role.valueOf(req.getRole())); // validate in real code
+
+        if(req.getAssignedStationIds()!=null) {
+            Set<Station> stations = stationRepo.findAllById(req.getAssignedStationIds()).stream().collect(Collectors.toSet());
+            u.setAssignedStations(stations);
+        }
+        userRepo.save(u);
+        return ResponseEntity.ok(Map.of("message","user created"));
+    }
+
+    @Override
+    public ResponseEntity<?> signin(SigninRequest req) {
+        Authentication auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
+        );
+
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        String token = jwtUtil.generateToken(userDetails);
+
+        User user = userRepo.findByUsername(userDetails.getUsername()).orElseThrow();
+        List<UUID> stationIds = user.getAssignedStations()
+                .stream()
+                .map(Station::getId)
+                .collect(Collectors.toList());
+
+        JwtResponse jwtResponse = JwtResponse.builder()
+                .token(token)
+                .username(user.getUsername())
+                .role(user.getRole().name())
+                .assignedStationIds(stationIds)
+                .build();
+
+        return ResponseEntity.ok(jwtResponse);
+    }
+
+    @Override
+    public ResponseEntity<?> forgotPassword(String email) {
+        Optional<User> u = userRepo.findByEmail(email);
+        if (u.isEmpty()) {
+            return ResponseEntity.ok(Map.of("message", "If the email exists, a reset link will be sent"));
+        }
+
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken prt = new PasswordResetToken(
+                token,
+                u.get().getId(),
+                Instant.now().plus(1, ChronoUnit.HOURS),
+                false
+        );
+
+        passwordResetTokenRepository.save(prt);
+        // TODO: send email with token
+        return ResponseEntity.ok(Map.of("message", "Reset link sent (email sending to be implemented)"));
+    }
+
+    @Override
+    public ResponseEntity<?> resetPassword(String token, String newPassword){
+        var opt = passwordResetTokenRepository.findById(token);
+
+        if (opt.isEmpty() || opt.get().isUsed() || opt.get().getExpiresAt().isBefore(Instant.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid or expired token"));
+        }
+
+        var user = userRepo.findById(opt.get().getUserId()).orElseThrow();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepo.save(user);
+
+        opt.get().setUsed(true);
+        passwordResetTokenRepository.save(opt.get());
+
+        return ResponseEntity.ok(Map.of("message", "Password reset successful"));
+    }
+}

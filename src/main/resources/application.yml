@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: POS-GunStore
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gunpos
+    username: postgres
+    password: postgres
+    jpa:
+      hibernate:
+        ddl-auto: update    # use migrate via Flyway; use update only for quick dev
+      show-sql: true
+jwt:
+  secret: "mysuperlongsecretkeyforjwtthatismorethan32chars"
+  expiration-ms: 3600000
