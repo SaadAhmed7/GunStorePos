@@ -1,6 +1,8 @@
 package com.project.posgunstore.User.Authentication.ServiceImpl;
 
 import com.project.posgunstore.Config.Security.JwtUtil;
+import com.project.posgunstore.LoginHistory.Model.LoginHistory;
+import com.project.posgunstore.LoginHistory.Repository.LoginHistoryRepository;
 import com.project.posgunstore.PasswordResetToken.Model.PasswordResetToken;
 import com.project.posgunstore.PasswordResetToken.Repository.PasswordResetTokenRepository;
 import com.project.posgunstore.Station.Model.Station;
@@ -12,6 +14,7 @@ import com.project.posgunstore.User.Authentication.Service.AuthenticationService
 import com.project.posgunstore.User.Model.User;
 import com.project.posgunstore.User.Repository.UserRepository;
 import com.project.posgunstore.util.ENUM.Role;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,6 +46,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     PasswordResetTokenRepository passwordResetTokenRepository;
     @Autowired
     JwtUtil jwtUtil;
+    @Autowired
+    LoginHistoryRepository loginHistoryRepository;
 
     @Override
     public ResponseEntity<?> signup(SignupRequest req) {
@@ -72,12 +78,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public ResponseEntity<?> signin(SigninRequest req) {
+    public ResponseEntity<?> signin(SigninRequest req, HttpServletRequest request) {
         Authentication auth = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
         );
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        saveLoginHistory(req.getUsername(), request, true);
         String token = jwtUtil.generateToken(userDetails);
 
         User user = userRepo.findByUsername(userDetails.getUsername()).orElseThrow();
@@ -132,5 +139,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         passwordResetTokenRepository.save(opt.get());
 
         return ResponseEntity.ok(Map.of("message", "Password reset successful"));
+    }
+
+    private void saveLoginHistory(String username, HttpServletRequest request, boolean success) {
+        LoginHistory history = LoginHistory.builder()
+                .username(username)
+                .ipAddress(request.getRemoteAddr())
+                .userAgent(request.getHeader("User-Agent"))
+                .loginTime(LocalDateTime.now())
+                .success(success)
+                .build();
+
+        loginHistoryRepository.save(history);
     }
 }

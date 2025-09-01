@@ -3,6 +3,7 @@ package com.project.posgunstore.User.Authentication.Controller;
 import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
 import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
 import com.project.posgunstore.User.Authentication.Service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,8 @@ public class AuthController {
     }
 
     @PostMapping("/signin")
-    public ResponseEntity<?> signin(@Valid @RequestBody SigninRequest req) {
-        return authenticationService.signin(req);
+    public ResponseEntity<?> signin(@Valid @RequestBody SigninRequest req, HttpServletRequest request) {
+        return authenticationService.signin(req, request);
     }
 
     @PostMapping("/forgot-password")
