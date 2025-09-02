@@ -1,8 +1,10 @@
 package com.project.posgunstore.User.Authentication.Controller;
 
+import com.project.posgunstore.User.Authentication.DTO.CreateUserRequest;
 import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
 import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
 import com.project.posgunstore.User.Authentication.Service.AuthenticationService;
+import com.project.posgunstore.User.Model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,5 +36,16 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword) {
         return authenticationService.resetPassword(token, newPassword);
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        return authenticationService.getAllUsers();
+    }
+
+    @PostMapping("/users")
+    public ResponseEntity<?> addUser(@RequestBody CreateUserRequest req) {
+        User newUser = authenticationService.addUser(req);
+        return ResponseEntity.ok(newUser);
     }
 }

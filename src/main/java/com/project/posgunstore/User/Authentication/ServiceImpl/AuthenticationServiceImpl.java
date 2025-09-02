@@ -7,6 +7,7 @@ import com.project.posgunstore.PasswordResetToken.Model.PasswordResetToken;
 import com.project.posgunstore.PasswordResetToken.Repository.PasswordResetTokenRepository;
 import com.project.posgunstore.Station.Model.Station;
 import com.project.posgunstore.Station.Repository.StationRepository;
+import com.project.posgunstore.User.Authentication.DTO.CreateUserRequest;
 import com.project.posgunstore.User.Authentication.DTO.JwtResponse;
 import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
 import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
@@ -151,5 +152,37 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
 
         loginHistoryRepository.save(history);
+    }
+
+    public ResponseEntity<?> getAllUsers() {
+        List<User> users = userRepo.findAll(); // assuming you have a UserRepository
+        return ResponseEntity.ok(users);
+    }
+
+    public User addUser(CreateUserRequest req) {
+        if (userRepo.existsByEmail(req.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+        if (userRepo.existsByUsername(req.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
+
+        Set<Station> stations = new HashSet<>();
+        if (req.getStationIds() != null) {
+            stations.addAll(stationRepo.findAllById(req.getStationIds()));
+        }
+
+        User user = User.builder()
+                .firstName(req.getFirstName())
+                .lastName(req.getLastName())
+                .username(req.getUsername())
+                .email(req.getEmail())
+                .password(passwordEncoder.encode(req.getPassword()))
+                .role(req.getRole())
+                .assignedStations(stations)
+                .enabled(true)
+                .build();
+
+        return userRepo.save(user);
     }
 }
