@@ -1,5 +1,6 @@
 package com.project.posgunstore.Station.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.posgunstore.Store.Model.Store;
 import com.project.posgunstore.User.Model.User;
 import jakarta.persistence.*;
@@ -33,5 +34,6 @@ public class Station {
     private String status;
 
     @ManyToMany(mappedBy = "assignedStations", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<User> assignedUsers = new HashSet<>();
 }

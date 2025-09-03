@@ -185,4 +185,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return userRepo.save(user);
     }
+
+    public void softDeleteUser(UUID userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.setEnabled(false);
+        userRepo.save(user);
+    }
+
 }

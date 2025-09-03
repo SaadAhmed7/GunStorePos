@@ -7,6 +7,8 @@ import com.project.posgunstore.User.Model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
 public interface AuthenticationService {
     ResponseEntity<?> signup(SignupRequest req);
     ResponseEntity<?> signin(SigninRequest req, HttpServletRequest request);
@@ -14,4 +16,5 @@ public interface AuthenticationService {
     ResponseEntity<?> resetPassword(String token, String newPassword);
     ResponseEntity<?> getAllUsers();
     User addUser(CreateUserRequest req);
+    void softDeleteUser(UUID userId);
 }
