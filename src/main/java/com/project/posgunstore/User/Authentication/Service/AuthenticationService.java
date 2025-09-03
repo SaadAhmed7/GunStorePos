@@ -3,6 +3,7 @@ package com.project.posgunstore.User.Authentication.Service;
 import com.project.posgunstore.User.Authentication.DTO.CreateUserRequest;
 import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
 import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
+import com.project.posgunstore.User.Authentication.DTO.UpdateUserRequest;
 import com.project.posgunstore.User.Model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -17,4 +18,5 @@ public interface AuthenticationService {
     ResponseEntity<?> getAllUsers();
     User addUser(CreateUserRequest req);
     void softDeleteUser(UUID userId);
+    User updateUser(UUID userId, UpdateUserRequest req);
 }

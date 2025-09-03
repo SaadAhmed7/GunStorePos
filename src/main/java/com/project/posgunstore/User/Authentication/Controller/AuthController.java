@@ -3,6 +3,7 @@ package com.project.posgunstore.User.Authentication.Controller;
 import com.project.posgunstore.User.Authentication.DTO.CreateUserRequest;
 import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
 import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
+import com.project.posgunstore.User.Authentication.DTO.UpdateUserRequest;
 import com.project.posgunstore.User.Authentication.Service.AuthenticationService;
 import com.project.posgunstore.User.Model.User;
 import jakarta.servlet.http.HttpServletRequest;
@@ -55,6 +56,12 @@ public class AuthController {
     public ResponseEntity<?> softDeleteUser(@PathVariable UUID id) {
         authenticationService.softDeleteUser(id);
         return ResponseEntity.ok("User disabled successfully");
+    }
+
+    @PutMapping("/users/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest req) {
+        User updatedUser = authenticationService.updateUser(id, req);
+        return ResponseEntity.ok(updatedUser);
     }
 
 }

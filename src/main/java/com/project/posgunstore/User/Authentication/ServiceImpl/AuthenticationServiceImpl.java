@@ -7,10 +7,7 @@ import com.project.posgunstore.PasswordResetToken.Model.PasswordResetToken;
 import com.project.posgunstore.PasswordResetToken.Repository.PasswordResetTokenRepository;
 import com.project.posgunstore.Station.Model.Station;
 import com.project.posgunstore.Station.Repository.StationRepository;
-import com.project.posgunstore.User.Authentication.DTO.CreateUserRequest;
-import com.project.posgunstore.User.Authentication.DTO.JwtResponse;
-import com.project.posgunstore.User.Authentication.DTO.SigninRequest;
-import com.project.posgunstore.User.Authentication.DTO.SignupRequest;
+import com.project.posgunstore.User.Authentication.DTO.*;
 import com.project.posgunstore.User.Authentication.Service.AuthenticationService;
 import com.project.posgunstore.User.Model.User;
 import com.project.posgunstore.User.Repository.UserRepository;
@@ -193,5 +190,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         user.setEnabled(false);
         userRepo.save(user);
     }
+
+    public User updateUser(UUID userId, UpdateUserRequest req) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        if (req.getFirstName() != null) user.setFirstName(req.getFirstName());
+        if (req.getLastName() != null) user.setLastName(req.getLastName());
+        if (req.getEmail() != null) user.setEmail(req.getEmail());
+        if (req.getRole() != null) user.setRole(req.getRole());
+        if (req.getEnabled() != null) user.setEnabled(req.getEnabled());
+
+        if (req.getStationIds() != null) {
+            user.setAssignedStations(
+                    new HashSet<>(stationRepo.findAllById(req.getStationIds()))
+            );
+        }
+
+        return userRepo.save(user);
+    }
+
 
 }
