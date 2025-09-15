@@ -191,6 +191,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userRepo.save(user);
     }
 
+    public void enableUser(UUID userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.setEnabled(true);
+        userRepo.save(user);
+    }
+
     public User updateUser(UUID userId, UpdateUserRequest req) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));

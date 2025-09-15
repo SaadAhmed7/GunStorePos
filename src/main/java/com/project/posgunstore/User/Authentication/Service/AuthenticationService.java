@@ -18,5 +18,6 @@ public interface AuthenticationService {
     ResponseEntity<?> getAllUsers();
     User addUser(CreateUserRequest req);
     void softDeleteUser(UUID userId);
+    void enableUser(UUID userId);
     User updateUser(UUID userId, UpdateUserRequest req);
 }

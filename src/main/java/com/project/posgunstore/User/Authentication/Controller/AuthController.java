@@ -58,6 +58,12 @@ public class AuthController {
         return ResponseEntity.ok("User disabled successfully");
     }
 
+    @PatchMapping("/users/{id}/enable")
+    public ResponseEntity<?> enableUser(@PathVariable UUID id) {
+        authenticationService.softDeleteUser(id);
+        return ResponseEntity.ok("User Enabled successfully");
+    }
+
     @PutMapping("/users/{id}")
     public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest req) {
         User updatedUser = authenticationService.updateUser(id, req);
