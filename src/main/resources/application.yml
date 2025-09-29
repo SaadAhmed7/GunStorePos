@@ -12,3 +12,18 @@ spring:
 jwt:
   secret: "mysuperlongsecretkeyforjwtthatismorethan32chars"
   expiration-ms: 3600000
+storage:
+  type: s3
+  s3:
+    endpoint: "https://nyc3.digitaloceanspaces.com"
+    region: "nyc3"
+    bucket: "bcscs3"
+    accessKey: "DO00L242X3448FG6CEJC"
+    secretKey: "IgkO6WPBho2+smVwMEV8noLQ+w+fG+PZFkMbu32Mnxs"
+file:
+    storage:
+      local-root: "/var/data/app-files"
+
+backup:
+  source-dir: "/var/data/app-data"
+
