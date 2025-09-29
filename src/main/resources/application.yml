@@ -15,9 +15,9 @@ jwt:
 storage:
   type: s3
   s3:
-    endpoint: "https://nyc3.digitaloceanspaces.com"
-    region: "nyc3"
-    bucket: "bcscs3"
+    endpoint: "https://sfo3.digitaloceanspaces.com"
+    region: "sfo3"
+    bucket: "posgunstore"
     accessKey: "DO00L242X3448FG6CEJC"
     secretKey: "IgkO6WPBho2+smVwMEV8noLQ+w+fG+PZFkMbu32Mnxs"
 file:
