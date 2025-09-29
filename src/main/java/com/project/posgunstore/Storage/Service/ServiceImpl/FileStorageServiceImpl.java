@@ -56,7 +56,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new RuntimeException("Upload failed", e);
         }
 
-        String url = "https://" + bucket + ".nyc3.digitaloceanspaces.com/" + key;
+        String url = "https://" + bucket + ".sfo3.digitaloceanspaces.com/" + key;
 
         ProductImage img = ProductImage.builder()
                 .fileName(file.getOriginalFilename())
@@ -135,7 +135,7 @@ public class FileStorageServiceImpl implements FileStorageService {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        return "https://" + bucket + ".nyc3.digitaloceanspaces.com/" + key;
+        return "https://" + bucket + ".sfo3.digitaloceanspaces.com/" + key;
     }
 
     @Override
@@ -163,6 +163,6 @@ public class FileStorageServiceImpl implements FileStorageService {
     // --- Templates ---
     @Override
     public String getImportTemplateUrl(String templateName) {
-        return "https://" + bucket + ".nyc3.digitaloceanspaces.com/templates/" + templateName;
+        return "https://" + bucket + ".sfo3.digitaloceanspaces.com/templates/" + templateName;
     }
 }
