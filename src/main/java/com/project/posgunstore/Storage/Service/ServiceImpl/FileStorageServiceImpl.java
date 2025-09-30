@@ -18,10 +18,13 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -124,19 +127,58 @@ public class FileStorageServiceImpl implements FileStorageService {
     // --- Backups ---
     @Override
     public String createBackup() {
-        String fileName = "backup-" + LocalDateTime.now() + ".sql";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        String fileName = "backup-" + timestamp + ".sql";
         String key = "backups/" + fileName;
 
-        // TODO: Run pg_dump and upload the file to S3
+        try {
+            // 1. Run pg_dump command
+            ProcessBuilder pb = new ProcessBuilder(
+                    "pg_dump",
+                    "-h", "localhost",          // change if DB is remote
+                    "-U", "postgres",           // username
+                    "-d", "gunpos"              // database name
+            );
+            pb.environment().put("PGPASSWORD", "postgres"); // set password here
+            Process process = pb.start();
 
-        backupHistoryRepo.save(BackupHistory.builder()
-                .fileName(fileName)
-                .sizeKb(1024L)
-                .createdAt(LocalDateTime.now())
-                .build());
+            // 2. Capture pg_dump output into byte[]
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (InputStream is = process.getInputStream()) {
+                is.transferTo(baos);
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("pg_dump failed with exit code " + exitCode);
+            }
 
-        return "https://" + bucket + ".sfo3.digitaloceanspaces.com/" + key;
+            byte[] backupBytes = baos.toByteArray();
+
+            // 3. Upload to DigitalOcean Spaces
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentType("application/sql")
+                    .acl(ObjectCannedACL.PRIVATE) // backups should stay private
+                    .build();
+
+            s3Client.putObject(putRequest, RequestBody.fromBytes(backupBytes));
+
+            // 4. Save backup history
+            backupHistoryRepo.save(BackupHistory.builder()
+                    .fileName(fileName)
+                    .sizeKb((long) (backupBytes.length / 1024))
+                    .createdAt(LocalDateTime.now())
+                    .build());
+
+            // 5. Return URL
+            return "https://" + bucket + ".sfo3.digitaloceanspaces.com/" + key;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Backup failed", e);
+        }
     }
+
 
     @Override
     public List<BackupHistory> getBackupList() {
