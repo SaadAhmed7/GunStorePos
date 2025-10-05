@@ -23,4 +23,9 @@ public interface FileStorageService {
 
     // Templates
     String getImportTemplateUrl(String templateName);
+
+    String storeGeneric(MultipartFile file, String folder);
+
+    /** Generate a presigned download URL for an arbitrary object key. */
+    String generateFileDownloadUrl(String key);
 }

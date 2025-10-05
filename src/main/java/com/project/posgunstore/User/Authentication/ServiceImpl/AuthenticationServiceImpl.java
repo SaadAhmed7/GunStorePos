@@ -1,6 +1,6 @@
 package com.project.posgunstore.User.Authentication.ServiceImpl;
 
-import com.project.posgunstore.Config.Security.JwtUtil;
+import com.project.posgunstore.Configuration.Security.JwtUtil;
 import com.project.posgunstore.LoginHistory.Model.LoginHistory;
 import com.project.posgunstore.LoginHistory.Repository.LoginHistoryRepository;
 import com.project.posgunstore.PasswordResetToken.Model.PasswordResetToken;

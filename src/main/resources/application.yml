@@ -7,7 +7,7 @@ spring:
     password: postgres
   jpa:
     hibernate:
-      ddl-auto: update    # use migrate via Flyway; use update only for quick dev
+      ddl-auto: none    # use migrate via Flyway; use update only for quick dev
       show-sql: true
 jwt:
   secret: "mysuperlongsecretkeyforjwtthatismorethan32chars"

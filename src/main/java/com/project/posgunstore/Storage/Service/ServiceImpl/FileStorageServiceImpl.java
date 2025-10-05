@@ -207,4 +207,38 @@ public class FileStorageServiceImpl implements FileStorageService {
     public String getImportTemplateUrl(String templateName) {
         return "https://" + bucket + ".sfo3.digitaloceanspaces.com/templates/" + templateName;
     }
+
+    @Override
+    public String storeGeneric(MultipartFile file, String folder) {
+        String safeFolder = (folder == null || folder.isBlank()) ? "uploads" : folder.replaceAll("^/+", "");
+        String key = safeFolder + "/" + UUID.randomUUID() + "-" + file.getOriginalFilename();
+        try {
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentType(file.getContentType())
+                    .acl(ObjectCannedACL.PUBLIC_READ) // make public for easy access; flip to PRIVATE if needed
+                    .build();
+            s3Client.putObject(putRequest, RequestBody.fromBytes(file.getBytes()));
+            return key;
+        } catch (IOException e) {
+            throw new RuntimeException("Upload failed", e);
+        }
+    }
+
+    @Override
+    public String generateFileDownloadUrl(String key) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .getObjectRequest(getObjectRequest)
+                .signatureDuration(Duration.ofHours(1))
+                .build();
+
+        PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(presignRequest);
+        return presigned.url().toString();
+    }
 }
